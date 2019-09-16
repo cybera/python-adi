@@ -1,0 +1,12 @@
+version: '3.4'
+services:
+  dev:
+    build: .
+    image: cybera/python-adi-dev:latest
+    volumes:
+      - ./:/usr/src/pkg
+
+networks:
+  default:
+    external:
+      name: adi_default    
