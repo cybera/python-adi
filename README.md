@@ -4,8 +4,8 @@ A Python package for interacting with ADI via Python scripts and/or Jupyter note
 
 ## Environment variables
 
-This package needs to know where your ADI host is and your access key. Either do the
-following before running python:
+This package needs to know where a valid ADI host is and have a valid api key. These
+can be set as environment variables:
 
 ```bash
 export ADI_API_HOST=your_api_host
@@ -18,6 +18,37 @@ or, in python (before you `import adi`):
 import os
 os.environ['ADI_API_HOST'] = your_api_host
 os.environ['ADI_API_KEY'] = your_api_key
+```
+
+## Usage
+
+If you've already set environment variables as indicated above, you can
+just rely on the defaults:
+
+```python
+from adi import Connection
+adi = Connection(os.environ['ADI_API_HOST'], os.environ['ADI_API_KEY'])
+adi.organization.set_default('your-org')
+
+# list datasets
+adi.list()
+
+# get a dataset
+df = adi.get('some-dataset')
+```
+
+You can also specify a host and api key when initializing the `Connection`:
+
+```python
+from adi import Connection
+adi = Connection('http://your-host', 'your-api-key')
+adi.organization.set_default('your-org')
+
+# list datasets
+adi.list()
+
+# get a dataset
+df = adi.get('some-dataset')
 ```
 
 ## Development setup

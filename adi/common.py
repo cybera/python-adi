@@ -4,6 +4,11 @@ import requests
 import mimetypes
 import json
 
+class APIError(ValueError):
+  def __init__(self, graphql_error_list):
+    error_msg = '\n'.join([error['message'] for error in graphql_error_list])
+    super().__init__(f"\n\n{error_msg}")
+
 def is_uuid(str):
   # RegEx from: https://stackoverflow.com/a/13653180
   uuid_checker = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$', re.IGNORECASE)
@@ -17,14 +22,12 @@ def is_uuid(str):
 # files, we'd have to review the following spec and modify as necessary:
 #
 # https://github.com/jaydenseric/graphql-multipart-request-spec
-def gql_query(query, variables=dict(), file=None, host=None, api_key=None):
-  if api_key is None:
-    api_key = os.environ.get('ADI_API_KEY')
-  if host is None:
-    host = os.environ.get('ADI_API_HOST')
+def gql_query(query, variables=dict(), file=None, connection=None):
+  if connection is None:
+    raise Exception("Connection info not provided")
   
   headers = {
-    'Authorization': f"Api-Key {api_key}"
+    'Authorization': f"Api-Key {connection.api_key}"
   }
 
   escaped_gql = (query
@@ -60,24 +63,26 @@ def gql_query(query, variables=dict(), file=None, host=None, api_key=None):
       '0': (fileName, open(file, 'rb'), mimetype)
     }
 
-  r = requests.post(f"{host}/graphql", headers=headers, data=data, files=files)
+  r = requests.post(f"{connection.host}/graphql", headers=headers, data=data, files=files)
 
-  json_content = None
-  result_data = None
+  json_content = {}
 
   try:
     json_content = json.loads(r.content)
-    result_data = json_content['data']
   except Exception as e:
     print("gql_query problem: ")
     if not json_content:
       print(f"Can't parse JSON for {r.content}")
-    elif not result_data:
-      print(f"Can't get result data from:\n{json_content}")
-
     raise(e)
 
-  return result_data
+  if 'errors' in json_content:
+    raise APIError(json_content['errors'])
+  elif 'data' in json_content:
+    return json_content['data']
+  else:
+    raise Exception(f"Can't get result data from:\n{json_content}")
+
+  return json_content['data']
 
 def read_code(path:str):
   if path and os.path.exists(path):
