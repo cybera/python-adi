@@ -3,7 +3,7 @@ from .transformation import TransformationAPI
 from .organization import OrganizationAPI
 
 class Connection:
-  def __init__(self, host, api_key):
+  def __init__(self, host=None, api_key=None):
     self.host    = host    or os.environ.get('ADI_API_HOST')
     self.api_key = api_key or os.environ.get('ADI_API_KEY')
 

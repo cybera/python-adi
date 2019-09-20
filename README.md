@@ -27,7 +27,7 @@ just rely on the defaults:
 
 ```python
 from adi import Connection
-adi = Connection(os.environ['ADI_API_HOST'], os.environ['ADI_API_KEY'])
+adi = Connection()
 adi.organization.set_default('your-org')
 
 # list datasets
