@@ -11,7 +11,7 @@ class DatasetAPI:
   def __init__(self, connection):
     self.__connection = connection
 
-  def get(self, uuid_or_name, raw=False, as_text=True):
+  def get(self, uuid_or_name, raw=False, as_text=True, format=None):
     uuid = self.__resolve_to_uuid(uuid_or_name)
     connection = self.__connection
 
@@ -19,7 +19,11 @@ class DatasetAPI:
       raise ValueError(f"Dataset not found for {uuid_or_name}")
 
     headers = { 'Authorization': f"Api-Key {connection.api_key}" }
-    response = requests.get(f"{connection.host}/dataset/{uuid}", headers=headers)
+    download_url = f"{connection.host}/dataset/{uuid}"
+    if format:
+      download_url = f"{download_url}?type={format}"
+
+    response = requests.get(download_url, headers=headers)
 
     if raw:
       if as_text:
