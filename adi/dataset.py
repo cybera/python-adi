@@ -5,15 +5,12 @@ import pandas as pd
 from typing import Dict
 
 from .common import is_uuid, gql_query, read_code
-from . import organization
+from .api_base import OrganizationAwareAPI
 
-class DatasetAPI:
-  def __init__(self, connection):
-    self.__connection = connection
-
+class DatasetAPI(OrganizationAwareAPI):
   def get(self, uuid_or_name, raw=False, as_text=True, format=None):
-    uuid = self.__resolve_to_uuid(uuid_or_name)
-    connection = self.__connection
+    uuid = self._resolve_to_uuid(uuid_or_name)
+    connection = self._connection
 
     if not uuid:
       raise ValueError(f"Dataset not found for {uuid_or_name}")
@@ -53,12 +50,12 @@ class DatasetAPI:
     '''
 
     variables = dict(
-      org = self.__default_organization(),
+      org = self._default_organization(),
       datasetUuid = datasetUuid,
       datasetName = datasetName
     )
 
-    results = gql_query(query, variables=variables, connection=self.__connection)
+    results = gql_query(query, variables=variables, connection=self._connection)
     
     if len(results['dataset']) > 1:
       raise ValueError("Couldn't find unique dataset for name or uuid")
@@ -77,10 +74,10 @@ class DatasetAPI:
     '''
     
     variables = dict(
-      org = self.__default_organization()
+      org = self._default_organization()
     )
     
-    results = gql_query(query, variables=variables, connection=self.__connection)
+    results = gql_query(query, variables=variables, connection=self._connection)
 
     return results['dataset']
 
@@ -100,7 +97,7 @@ class DatasetAPI:
     '''
     
     variables = dict(
-      ownerId = self.__default_organization()['uuid'],
+      ownerId = self._default_organization()['uuid'],
       datasetName = name,
       type = type
     )
@@ -108,7 +105,7 @@ class DatasetAPI:
     if type:
       variables['type'] = type
     
-    result = gql_query(query, variables=variables, connection=self.__connection)
+    result = gql_query(query, variables=variables, connection=self._connection)
     
     return result['createDataset']
 
@@ -130,7 +127,7 @@ class DatasetAPI:
       file = 'null' # this is important for the graphql upload standard
     )
 
-    result = gql_query(query, variables=variables, file=file, connection=self.__connection)
+    result = gql_query(query, variables=variables, file=file, connection=self._connection)
     
     return result['updateDataset']
 
@@ -154,12 +151,12 @@ class DatasetAPI:
       }
     }
     '''
-    result = gql_query(query, variables={'uuid':uuid}, connection=self.__connection)
+    result = gql_query(query, variables={'uuid':uuid}, connection=self._connection)
     
     return result['generateDataset']
 
   def delete(self, uuid_or_name):
-    uuid = self.__resolve_to_uuid(uuid_or_name)
+    uuid = self._resolve_to_uuid(uuid_or_name)
     if not uuid:
       raise ValueError("Can't find the dataset to delete")
 
@@ -168,7 +165,7 @@ class DatasetAPI:
       deleteDataset(uuid: $uuid)
     }
     '''
-    result = gql_query(query, variables={'uuid':uuid}, connection=self.__connection)
+    result = gql_query(query, variables={'uuid':uuid}, connection=self._connection)
     
     return result['deleteDataset']
 
@@ -195,7 +192,7 @@ class DatasetAPI:
       code = code
     )
     
-    result = gql_query(query, variables=variables, connection=self.__connection)
+    result = gql_query(query, variables=variables, connection=self._connection)
     
     return result['saveInputTransformation']
 
@@ -219,31 +216,17 @@ class DatasetAPI:
       output   = self.__ensure_dataset(uuid_or_name, type=type),
       template = dict(name=template),
       inputs   = [dict(alias=k, dataset=dict(name=v)) for k,v in inputs.items()],
-      org      = self.__default_organization(),
+      org      = self._default_organization(),
     )
 
-    result = gql_query(query, variables=variables, connection=self.__connection)
+    result = gql_query(query, variables=variables, connection=self._connection)
 
     return result['saveInputTransformation']
 
   def __ensure_dataset(self, uuid_or_name, type='csv'):
-    uuid = self.__resolve_to_uuid(uuid_or_name)
+    uuid = self._resolve_to_uuid(uuid_or_name)
     if not uuid and (not uuid_or_name or isinstance(uuid_or_name, str)):
       info = self.create(uuid_or_name, type=type)
       uuid = info['uuid']
 
     return uuid
-
-  def __default_organization(self):
-    return self.__connection.organization.default()
-
-  def __resolve_to_uuid(self, uuid_or_name):
-    if not is_uuid(uuid_or_name):
-      info = self.meta(uuid_or_name)
-      if info:
-        return info['uuid']
-      else:
-        return None
-    else:
-      return uuid_or_name
-      

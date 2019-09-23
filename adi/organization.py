@@ -1,8 +1,9 @@
 from .common import gql_query
+from .api_base import APIBase
 
-class OrganizationAPI:
+class OrganizationAPI(APIBase):
   def __init__(self, connection):
-    self.__connection = connection
+    super().__init__(connection)
     self.__default_org = None
 
   def set_default(self, name=None, uuid=None, id=None):
@@ -28,7 +29,7 @@ class OrganizationAPI:
           }
         }
       }
-    ''', connection=self.__connection)
+    ''', connection=self._connection)
 
     organizations = info['currentUser']['organizations']
 
@@ -51,7 +52,7 @@ class OrganizationAPI:
           }
         }
       }
-      ''', connection=self.__connection)
+      ''', connection=self._connection)
       self.__default_org = info['currentUser']['organizations'][0]
     
     return self.__default_org
