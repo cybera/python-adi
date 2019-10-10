@@ -27,29 +27,70 @@ just rely on the defaults:
 
 ```python
 from adi import Connection
-adi = Connection()
-adi.organization.set_default('your-org')
+client = Connection()
+client.organization.set_default('your-org')
 
 # list datasets
-adi.list()
+adi.dataset.list()
 
 # get a dataset
-df = adi.get('some-dataset')
+df = adi.dataset.get('some-dataset')
 ```
 
 You can also specify a host and api key when initializing the `Connection`:
 
 ```python
 from adi import Connection
-adi = Connection('http://your-host', 'your-api-key')
-adi.organization.set_default('your-org')
+client = Connection('http://your-host', 'your-api-key')
+client.organization.set_default('your-org')
 
 # list datasets
-adi.list()
+client.dataset.list()
 
 # get a dataset
-df = adi.get('some-dataset')
+df = client.dataset.get('some-dataset')
 ```
+
+## Other operations
+
+The python API is split into 3 major high level namespaces: `dataset`, `transformation`, and `organization`. The main ones you'll be working with are the first two.
+
+Uploading a dataset:
+
+```python
+client.dataset.upload('dataset-name', '/path/to/dataset.csv')
+```
+
+Defining a computed dataset (via a non-reusable transformation):
+
+```python
+client.dataset.define('computed-name', '/path/to/transformation.py')
+```
+
+where 'transformation.py' would be expected to have something like the following:
+
+```python
+df = dataset_input('dataset-name')
+
+def transform():
+  return df.head()
+```
+
+This transformation assumes the existence of 'dataset-name'.
+
+If we wanted to define a *reusable* transformation, we do something very similar:
+
+```python
+client.transformation.define('reusable-name', '/path/to/reusable.py', inputs=['dataset-name'])
+```
+
+We could even use the same file as above. The main difference is to use this transformation, we have to tell it what *actual* datasets to map to `dataset-name`:
+
+```python
+client.dataset.define('computed-name-2', template='reusable-name', inputs={ 'dataset-name': 'some-dataset'})
+```
+
+In this case, we expect `some-dataset` to exist, but we could have used that transformation on any other existing dataset as well.
 
 ## Development setup
 
