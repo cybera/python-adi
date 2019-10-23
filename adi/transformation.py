@@ -6,7 +6,7 @@ from .api_base import OrganizationAwareAPI
 
 
 class TransformationAPI(OrganizationAwareAPI):
-  def define(self, name, path=None, code=None, inputs=[]):
+  def define(self, name, path=None, code=None, inputs=[], tags=[]):
     if not path and not code:
       raise ValueError("Need to either give a path to a transformation code file or the code itself")
 
@@ -18,21 +18,25 @@ class TransformationAPI(OrganizationAwareAPI):
     code = read_code(path)
 
     query = '''
-      mutation CreateTransformationTemplate($name: String!, $inputs: [String], $code: String!, $owner: OrganizationRef!) {
+      mutation CreateTransformationTemplate($name: String!, $inputs: [String], $code: String!, $owner: OrganizationRef!, $tags: [String]) {
         createTransformationTemplate(
           name: $name,
           inputs: $inputs,
           code: $code,
-          owner: $owner
+          owner: $owner,
+          tagNames: $tags
         ) {
           id
           uuid
           name
+          tags {
+            name
+          }
         }
       }
     '''
 
-    variables = {'name':name, 'inputs': inputs, 'code': code, 'owner': org}
+    variables = {'name':name, 'inputs': inputs, 'code': code, 'owner': org, 'tags': tags}
     result = gql_query(query, variables=variables, connection=self._connection)
 
     return result['createTransformationTemplate']
@@ -66,22 +70,25 @@ class TransformationAPI(OrganizationAwareAPI):
 
     return results['transformation']
 
-  def update(self, uuid_or_name, name=None, inputs=None, code=None):
+  def update(self, uuid_or_name, name=None, inputs=None, code=None, tags=None):
     uuid = self._resolve_to_uuid(uuid_or_name)
     if not uuid:
       raise ValueError("Can't find the transformation to update")
 
     query = '''
-    mutation UpdateTransformation($uuid: String!, $name: String, $inputs: [String], $code: String) {
-      updateTransformation(uuid: $uuid, fields: {name: $name, inputs: $inputs, code: $code}) {
+    mutation UpdateTransformation($uuid: String!, $name: String, $inputs: [String], $code: String, $tags: [String]) {
+      updateTransformation(uuid: $uuid, fields: {name: $name, inputs: $inputs, code: $code, tagNames: $tags}) {
         uuid
         name
         inputs
         code
+        tags {
+          name
+        }
       }
     }
     '''
-    result = gql_query(query, variables={'uuid':uuid, 'name':name, 'inputs':inputs, 'code':code}, connection=self._connection)
+    result = gql_query(query, variables={'uuid':uuid, 'name':name, 'inputs':inputs, 'code':code, 'tags': tags}, connection=self._connection)
 
     return result['updateTransformation']
 
