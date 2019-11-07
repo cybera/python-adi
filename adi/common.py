@@ -87,5 +87,6 @@ def gql_query(query, variables=dict(), file=None, connection=None):
 def read_code(path:str):
   if path and os.path.exists(path):
     with open(path, 'r') as file:
-      code = file.read()
-  return code
+      return file.read()
+
+  raise FileNotFoundError

@@ -6,7 +6,7 @@ from .api_base import OrganizationAwareAPI
 
 
 class TransformationAPI(OrganizationAwareAPI):
-  def define(self, name, path=None, code=None, inputs=[], tags=[]):
+  def define(self, name, path=None, code=None, inputs=[], tags=[], description=''):
     if not path and not code:
       raise ValueError("Need to either give a path to a transformation code file or the code itself")
 
@@ -15,12 +15,14 @@ class TransformationAPI(OrganizationAwareAPI):
 
     org = self._connection.organization.default()
 
-    code = read_code(path)
+    if code is None:
+      code = read_code(path)
 
     query = '''
-      mutation CreateTransformationTemplate($name: String!, $inputs: [String], $code: String!, $owner: OrganizationRef!, $tags: [String]) {
+      mutation CreateTransformationTemplate($name: String!, $description: String, $inputs: [String], $code: String!, $owner: OrganizationRef!, $tags: [String]) {
         createTransformationTemplate(
           name: $name,
+          description: $description,
           inputs: $inputs,
           code: $code,
           owner: $owner,
@@ -29,6 +31,9 @@ class TransformationAPI(OrganizationAwareAPI):
           id
           uuid
           name
+          description
+          inputs
+          code
           tags {
             name
           }
@@ -36,7 +41,7 @@ class TransformationAPI(OrganizationAwareAPI):
       }
     '''
 
-    variables = {'name':name, 'inputs': inputs, 'code': code, 'owner': org, 'tags': tags}
+    variables = {'name':name, 'description': description, 'inputs': inputs, 'code': code, 'owner': org, 'tags': tags}
     result = gql_query(query, variables=variables, connection=self._connection)
 
     return result['createTransformationTemplate']
@@ -70,16 +75,17 @@ class TransformationAPI(OrganizationAwareAPI):
 
     return results['transformation']
 
-  def update(self, uuid_or_name, name=None, inputs=None, code=None, tags=None):
+  def update(self, uuid_or_name, name=None, inputs=None, code=None, tags=None, description=''):
     uuid = self._resolve_to_uuid(uuid_or_name)
     if not uuid:
       raise ValueError("Can't find the transformation to update")
 
     query = '''
-    mutation UpdateTransformation($uuid: String!, $name: String, $inputs: [String], $code: String, $tags: [String]) {
-      updateTransformation(uuid: $uuid, fields: {name: $name, inputs: $inputs, code: $code, tagNames: $tags}) {
+    mutation UpdateTransformation($uuid: String!, $name: String, $description: String, $inputs: [String], $code: String, $tags: [String]) {
+      updateTransformation(uuid: $uuid, fields: {name: $name, description: $description, inputs: $inputs, code: $code, tagNames: $tags}) {
         uuid
         name
+        description
         inputs
         code
         tags {
@@ -88,7 +94,7 @@ class TransformationAPI(OrganizationAwareAPI):
       }
     }
     '''
-    result = gql_query(query, variables={'uuid':uuid, 'name':name, 'inputs':inputs, 'code':code, 'tags': tags}, connection=self._connection)
+    result = gql_query(query, variables={'uuid':uuid, 'name':name, 'description':description, 'inputs':inputs, 'code':code, 'tags': tags}, connection=self._connection)
 
     return result['updateTransformation']
 
