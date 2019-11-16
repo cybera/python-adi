@@ -115,10 +115,12 @@ class TransformationAPI(OrganizationAwareAPI):
   def list(self):
     query = '''
     query ($org: OrganizationRef!) {
-      transformations(org: $org) {
-        id
-        name
-        uuid
+      listTransformations(org: $org) {
+        transformations {
+          id
+          name
+          uuid
+        }
       }
     }
     '''
@@ -129,4 +131,4 @@ class TransformationAPI(OrganizationAwareAPI):
 
     results = gql_query(query, variables=variables, connection=self._connection)
 
-    return results['transformations']
+    return results['listTransformations']['transformations']
