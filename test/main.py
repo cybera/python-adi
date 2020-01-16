@@ -18,6 +18,14 @@ class TestTransformation(Transformation):
 def first10(iris):
   return iris.head(10)
 
+print("Transformations found:\n")
+keys = list(globals().keys())
+for key in keys:
+  if isinstance(globals()[key], Transformation):
+    print(f"- {key}")
+
+print("")
+
 iris = pd.read_csv("/usr/src/pkg/test/data/iris.csv")
 print(first10(iris))
 
@@ -28,7 +36,3 @@ first10.run({
   "output": "iris-first10.csv"
 })
 
-keys = list(globals().keys())
-for key in keys:
-  if isinstance(globals()[key], Transformation):
-    print(key)
