@@ -11,8 +11,8 @@ def test_writer(df, dataptr):
   df.to_csv(path)
 
 class TestTransformation(Transformation):
-  def __init__(self, transform_func, loader={}, default_loader=None, writer=None):
-    super().__init__(transform_func, loader, test_loader, test_writer)
+  def __init__(self, transform_func, loader={}, writer=None):
+    super().__init__(transform_func, { "default": test_loader }, test_writer)
 
 @transformation(TestTransformation)
 def first10(iris):

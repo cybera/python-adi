@@ -14,10 +14,8 @@ def csv_writer(df, tmpurl):
   df.to_csv(path)
 
 class Transformation:
-  def __init__(self, transform_func, loader={}, default_loader=csv_loader,
-               writer=csv_writer):
+  def __init__(self, transform_func, loader={ 'default': default_loader }, writer=default_writer):
     self.transform_func = transform_func
-    self.default_loader = default_loader
     self.loader = loader
     self.writer = writer
 
@@ -34,7 +32,7 @@ class Transformation:
         print(f"Specialized loader for {k}")
         loaded_params[k] = self.loader[k](v)
       else:
-        loaded_params[k] = self.default_loader(v)
+        loaded_params[k] = self.loader['default'](v)
   
     return loaded_params
 
@@ -46,9 +44,9 @@ class Transformation:
     self.writer(result, outputptr)
 
   def run(self, params):
-    loaded = self.load(params["input"])
+    loaded = self.load(params['input'])
     results = self.transform(loaded)
-    self.output(results, params["output"])
+    self.output(results, params['output'])
     return results
 
 def transformation(TransformationClass=Transformation, loader={}):
