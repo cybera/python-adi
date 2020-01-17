@@ -119,3 +119,14 @@ import adi
 and work with whatever the most up to date code is in your project folder.
 Keep in mind that you'll want to restart python and reimport your module to
 test out changes to the code.
+
+## Running tests
+
+```bash
+./run-tests.sh
+```
+
+This runs a python 3 development image, does a directory-based install of the current adi
+python package, and then runs *main.py* under *./test/*.
+
+Resulting dataset output will show up in *./test/data/output*.
