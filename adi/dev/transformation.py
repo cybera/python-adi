@@ -2,16 +2,41 @@ from types import FunctionType
 import os
 import pandas as pd
 import requests
+import hashlib
 
-def csv_loader(tmpurl):
-  # TODO: Use requests. Check if file in /tmp, write to that and read from the local path.
-  path = os.path.join("sample_data", dataptr)
-  return pd.read_csv(path)
+def resource_hash(datamap):
+  return hashlib.sha256(datamap['value'].encode('utf-8')).hexdigest()
 
-def csv_writer(df, tmpurl):
-  # TODO: Use requests. Should be able to write directly to the tmpurl.
-  path = os.path.join("sample_data", dataptr)
-  df.to_csv(path)
+def default_loader(datamap):
+  if datamap['storage'] == 'swift-tempurl':
+    ref = resource_hash(datamap)
+    tmppath = f"/tmp/adi/{ref}"
+    urlstream = requests.get(datamap['value'], stream=True)
+    # TODO: Check if tmppath exists already before downloading to it?
+    with open(tmppath, 'wb') as fd:
+      for chunk in urlstream.iter_content(chunk_size):
+        fd.write(chunk)
+    
+    if datamap['format'] == 'csv':
+      return pd.read_csv(path)
+    else:
+      raise Exception(f"Don't know how to deal with format: {datamap['format']}")
+  else:
+    raise Exception(f"Don't know how to deal with storage: {datamap['storage']}")
+
+def default_writer(df, datamap):
+  if datamap['storage'] == 'swift-tempurl':
+    ref = resource_hash(datamap)
+    tmppath = f"/tmp/adi/{ref}"
+
+    if datamap['format'] == 'csv':
+      # TODO: Check if tmppath exists already before writing to it?
+      df.to_csv(tmppath)
+      requests.put(datamap['value'], data=open(tmppath, 'rb'))
+    else:
+      raise Exception(f"Don't know how to deal with format: {datamap['format']}")
+  else:
+    raise Exception(f"Don't know how to deal with storage: {datamap['storage']}")
 
 class Transformation:
   def __init__(self, transform_func, loader={ 'default': default_loader }, writer=default_writer):

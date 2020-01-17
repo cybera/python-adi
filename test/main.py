@@ -2,12 +2,20 @@ import os
 import pandas as pd
 from adi.dev.transformation import Transformation, transformation
 
-def test_loader(dataptr):
-  path = os.path.join("/usr/src/pkg/test/data", dataptr)
+def test_loader(datamap):
+  if datamap["store"] == "test-local":
+    path = os.path.join("/usr/src/pkg/test/data", datamap["value"])
+  else:
+    raise Exception("Don't know how to retrieve data that isn't in a test-local store")
+
   return pd.read_csv(path)
 
-def test_writer(df, dataptr):
-  path = os.path.join("/usr/src/pkg/test/data/output", dataptr)
+def test_writer(df, datamap):
+  if datamap["store"] == "test-local":
+    path = os.path.join("/usr/src/pkg/test/data/output", datamap["value"])
+  else:
+    raise Exception("Don't know how to write data that isn't in a test-local store")
+
   df.to_csv(path)
 
 class TestTransformation(Transformation):
@@ -31,8 +39,15 @@ print(first10(iris))
 
 first10.run({
   "input": {
-    "iris": "iris.csv"
+    "iris": {
+      "value": "iris.csv",
+      "store": "test-local",
+      "format": "csv"
+    }
   },
-  "output": "iris-first10.csv"
+  "output": {
+    "value": "iris-first10.csv",
+    "store": "test-local",
+    "format": "csv"
+  }
 })
-
