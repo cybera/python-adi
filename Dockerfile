@@ -5,6 +5,6 @@ RUN mkdir -p /usr/src/app
 
 WORKDIR /usr/src/app
 
-RUN pip install --no-cache-dir requests pandas
+RUN pip install --no-cache-dir requests pandas pytest
 
 ENTRYPOINT [ "bash" ]
