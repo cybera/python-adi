@@ -37,20 +37,6 @@ def write_csv(df, url):
   data = df.to_csv(index=False).encode('utf-8')
   return write_raw(data, url)
 
-def read_script_module(url):
-  raw = read_raw(url)
-
-  # Write to a temporary file so we can load the script
-  temp_script = NamedTemporaryFile(delete=False, suffix='.py')
-  temp_script.write(raw)
-  temp_script.close()
-
-  # Load the script as a module
-  transform_spec = spec_from_file_location("transform", temp_script.name)
-  transform_module = module_from_spec(transform_spec)
-
-  return transform_module
-
 def cleanup_script_module(module):
   pass
 
