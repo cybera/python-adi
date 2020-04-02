@@ -23,8 +23,8 @@ def mock_writer(df, datamap, variant="imported"):
   df.to_csv(path)
 
 class MockTransformation(Transformation):
-  def __init__(self, transform_func, loader={}, writer=None, inputs={}):
-    super().__init__(transform_func, { "default": mock_loader }, mock_writer, inputs=inputs)
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, loader={ "default": mock_loader }, writer=mock_writer, **kwargs)
 
   def record_storage_metadata(self, outputmap):
     outpath = os.path.join(TEST_DATA_ROOT, outputmap["value"]['imported'])
