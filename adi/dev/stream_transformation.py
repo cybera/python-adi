@@ -1,8 +1,19 @@
 from .transformation import Transformation, default_analyzer
 import asyncio
 
-def stream_csv_loader(datamap, variant='imported'):
-  pass  
+from .transformation import Transformation, default_analyzer
+from . import storage
+
+def create_stream_loader(chunksize):
+  def stream_loader(datamap, variant='imported'):
+    if datamap['storage'] == 'swift-tempurl':
+      if datamap['format'] == 'csv':
+        return storage.read_csv(datamap['value'][variant], chunksize=chunksize)
+      else:
+        return storage.read_raw(datamap['value'][variant])
+    else:
+      raise Exception(f"Don't know how to deal with storage: {datamap['storage']}")
+  return stream_loader
 
 async def default_stream_analyzer(dfs, metadata):
   recorded = False

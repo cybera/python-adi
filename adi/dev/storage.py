@@ -1,3 +1,4 @@
+import asyncio
 from importlib.util import spec_from_file_location, module_from_spec
 from tempfile import NamedTemporaryFile
 from io import BytesIO
@@ -8,24 +9,30 @@ import pandas as pd
 
 magic = Magic(mime_encoding=True)
 
-def read_raw(url):
-  res = requests.get(url)
+def read_raw(url, chunksize=None):
+  res = requests.get(url, stream=(chunksize != None))
   if res.status_code != 200:
     raise Exception(f"Failed to read dataset {url} got {res.status_code}")
+  if chunksize:
+    return res.iter_content(chunk_size=chunksize)
+  else:
   return res.content
 
-def read_csv(url, params={}, detectEncoding=False):
-  raw = read_raw(url)
-  bio = BytesIO(raw)
-
+def read_csv(url, params={}, detectEncoding=False, chunksize=None):
   encoding = None
   if detectEncoding:
     # guess the encoding from up to the first 10MB of the file
-    encoding = magic.from_buffer(raw[0:1024*1024*10])
+    checkbytes = 1024*1024*10
+    headers = {"Range": f"bytes=0-{checkbytes}"}
+    res = requests.get(url, headers=headers)
+    encoding = magic.from_buffer(res.content)
 
   params = { 'encoding': encoding, **params }
 
-  return pd.read_csv(bio, **params)
+  if chunksize:
+    params['chunksize'] = chunksize
+
+  return pd.read_csv(url, **params)
 
 def write_raw(data, url):
   res = requests.put(url, data)
