@@ -1,8 +1,8 @@
+import httpx
 import asyncio
 from importlib.util import spec_from_file_location, module_from_spec
 from tempfile import NamedTemporaryFile
 from io import BytesIO
-
 from magic import Magic
 import requests
 import pandas as pd
@@ -16,7 +16,7 @@ def read_raw(url, chunksize=None):
   if chunksize:
     return res.iter_content(chunk_size=chunksize)
   else:
-  return res.content
+    return res.content
 
 def read_csv(url, params={}, detectEncoding=False, chunksize=None):
   encoding = None
@@ -38,11 +38,34 @@ def write_raw(data, url):
   res = requests.put(url, data)
   if res.status_code != 200 and res.status_code != 201:
     raise Exception("Failed to write dataset")
-  return len(data)
 
 def write_csv(df, url):
   data = df.to_csv(index=False).encode('utf-8')
-  return write_raw(data, url)
+  write_raw(data, url)
+
+async def adf_chunk_encoder(dfs):
+  # We only want to write a header from the first chunk
+  first_chunk = True
+
+  async for chunk in dfs:
+    encoded_chunk = chunk.to_csv(index=False, header=first_chunk).encode('utf-8')
+    first_chunk = False
+    yield encoded_chunk
+
+async def write_csv_stream(dfs, url):
+  data = adf_chunk_encoder(dfs)
+  client = httpx.AsyncClient()
+  res = await client.put(url, data=data)
+  await client.aclose()
+  if res.status_code != 200 and res.status_code != 201:
+    raise Exception("Failed to write dataset")
+
+async def write_raw_stream(data, url):
+  client = httpx.AsyncClient()
+  res = await client.put(url, data=data)
+  await client.aclose()
+  if res.status_code != 200 and res.status_code != 201:
+    raise Exception("Failed to write dataset")
 
 def read_script_module(url):
   raw = read_raw(url)

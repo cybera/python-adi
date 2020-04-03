@@ -1,4 +1,3 @@
-from .transformation import Transformation, default_analyzer
 import asyncio
 
 from .transformation import Transformation, default_analyzer
@@ -22,9 +21,19 @@ async def default_stream_analyzer(dfs, metadata):
       default_analyzer(df, metadata)
       recorded = True
 
+async def default_stream_writer(data, datamap, variant='imported'):
+  if datamap['storage'] == 'swift-tempurl':
+    # TODO: Should probably figure out from the return type and not the passed in format
+    if datamap['format'] == 'csv':
+      await storage.write_csv_stream(data, datamap['value'][variant])
+    else:
+      await storage.write_raw_stream(data, datamap['value'][variant])
+  else:
+    raise Exception(f"Don't know how to deal with storage: {datamap['storage']}")
+
 class StreamTransformation(Transformation):
   def __init__(self, *args, **kwargs):
-    streamargs = { 'analyzer': default_stream_analyzer, **kwargs }
+    streamargs = { 'analyzer': default_stream_analyzer, 'writer': default_stream_writer, **kwargs }
     super().__init__(*args, **streamargs)
 
   def load(self, input_params):
