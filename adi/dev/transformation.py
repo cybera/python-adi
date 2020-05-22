@@ -26,11 +26,29 @@ def default_writer(data, datamap, variant='imported'):
   else:
     raise Exception(f"Don't know how to deal with storage: {datamap['storage']}")
 
+def default_analyzer(data, metadata):
+  if type(data) is pd.DataFrame:
+    column_types = data.dtypes
+    columns = [
+      dict(
+        name=name,
+        originalName=name,
+        tags=[convert_type(column_types[name])],
+        order=i+1
+      ) for i, name in enumerate(data.columns)
+    ]
+    metadata['columns'] = columns
+    metadata['type'] = 'csv'
+  else:
+    metadata['type'] = 'document'
+
 class Transformation:
-  def __init__(self, transform_func, loader={ 'default': default_loader }, writer=default_writer, inputs={}):
+  def __init__(self, transform_func, loader={}, writer=default_writer, analyzer=default_analyzer, inputs={}):
     self.transform_func = transform_func
-    self.loader = loader
+    loader_defaults = { 'default': default_loader }
+    self.loader = { **loader_defaults, **loader }
     self.writer = writer
+    self.analyzer = analyzer
     self.inputs = inputs
     self.metadata = dict()
 
@@ -63,7 +81,7 @@ class Transformation:
 
   def output(self, result, outputptr):
     print(f"output: {outputptr}")
-    self.writer(result, outputptr)
+    return self.writer(result, outputptr)
 
   def sample(self, result):
     sample_data = ""
@@ -74,19 +92,10 @@ class Transformation:
     
   def output_sample(self, result, outputptr):
     sample_data = self.sample(result)
-    self.writer(sample_data, outputptr, variant='sample')
+    return self.writer(sample_data, outputptr, variant='sample')
 
   def record_result_metadata(self, result):
-    if type(result) is pd.DataFrame:
-      column_types = result.dtypes
-      columns = [dict(name=name,
-                      originalName=name,
-                      tags=[convert_type(column_types[name])],
-                      order=i+1) for i, name in enumerate(result.columns)]
-      self.metadata['columns'] = columns
-      self.metadata['type'] = 'csv'
-    else:
-      self.metadata['type'] = 'document'
+    return self.analyzer(result, self.metadata)
 
   def record_storage_metadata(self, outputptr):
     self.metadata['bytes'] = storage.bytes(outputptr['value']['imported'])
@@ -99,7 +108,7 @@ class Transformation:
     self.record_result_metadata(results)
     self.record_storage_metadata(params['output'])
 
-def transformation(TransformationClass=Transformation, loader={ 'default': default_loader }, inputs={}):
+def transformation(TransformationClass=Transformation, **kwargs):
   # Note that to test for functions, the normal recommended route is using
   # callable(suspected_function). But in our case, we're using __call__ in
   # the Transformation class itself, so when we really want to test for a
@@ -112,10 +121,10 @@ def transformation(TransformationClass=Transformation, loader={ 'default': defau
   # make things feel slicker for our wonderful data scientists.
   if isinstance(TransformationClass, FunctionType):
     print("calling decorator with no args")
-    return Transformation(TransformationClass, inputs=inputs)
+    return Transformation(TransformationClass, **kwargs)
   else:
     def wrap(transform_func):
-      t = TransformationClass(transform_func, loader, inputs=inputs)
+      t = TransformationClass(transform_func, **kwargs)
       return t
     return wrap
 

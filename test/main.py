@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from adi.dev.transformation import Transformation, transformation, dataset
+from adi.dev.stream_transformation import StreamTransformation
 
 import pytest
 
@@ -23,8 +24,8 @@ def mock_writer(df, datamap, variant="imported"):
   df.to_csv(path)
 
 class MockTransformation(Transformation):
-  def __init__(self, transform_func, loader={}, writer=None, inputs={}):
-    super().__init__(transform_func, { "default": mock_loader }, mock_writer, inputs=inputs)
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, loader={ "default": mock_loader }, writer=mock_writer, **kwargs)
 
   def record_storage_metadata(self, outputmap):
     outpath = os.path.join(TEST_DATA_ROOT, outputmap["value"]['imported'])
@@ -119,3 +120,68 @@ def test_nonreusable():
   assert(iris_means.metadata['bytes'] > 0 and iris_means.metadata['bytes'] < 500)
   column_keys = set(iris_means.metadata['columns'][0].keys())
   assert(column_keys - { 'name', 'order', 'originalName', 'tags' } == set())
+
+def mock_stream_csv_loader(datamap, variant="imported"):
+  if datamap["storage"] == "test-local":
+    path = os.path.join(TEST_DATA_ROOT, datamap["value"][variant])
+  else:
+    raise Exception("Don't know how to retrieve data that isn't in a test-local store")
+
+  return pd.read_csv(path, chunksize=10)
+
+async def mock_stream_writer(dfs, datamap, variant="imported"):
+  if datamap["storage"] == "test-local":
+    path = os.path.join(TEST_DATA_ROOT, datamap["value"][variant])
+  else:
+    raise Exception("Don't know how to write data that isn't in a test-local store")
+
+  first = True
+  async for df in dfs:
+    if first:
+      df.to_csv(path)
+      first = False
+    else:
+      df.to_csv(path, header=None, mode='a')
+
+class MockStreamTransformation(StreamTransformation):
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, writer=mock_stream_writer, **kwargs)
+
+  def record_storage_metadata(self, outputmap):
+    outpath = os.path.join(TEST_DATA_ROOT, outputmap["value"]['imported'])
+    self.metadata['bytes'] = os.stat(outpath).st_size
+
+def test_stream_transformations():
+  @transformation(
+    MockStreamTransformation,
+    inputs=dict(df = dataset('iris')),
+    loader=dict(df = mock_stream_csv_loader)
+  )
+  def iris_means(df):
+    return (df.groupby(['species'])
+              .mean())
+
+  iris_means.run({
+    "input": {
+      "df": {
+        "value": {
+          "original": "iris.csv",
+          "imported": "iris.csv"
+        },
+        "storage": "test-local",
+        "format": "csv"
+      }
+    },
+    "output": {
+      "value": {
+        "original": "output/iris-means-streamed.original.csv",
+        "imported": "output/iris-means-streamed.imported.csv",
+        "sample": "output/iris-means-streamed.sample.csv"
+      },
+      "storage": "test-local",
+      "format": "csv"
+    }
+  })
+
+  assert(os.path.exists(os.path.join(TEST_DATA_ROOT, "output/iris-means-streamed.imported.csv")))
+  assert(os.path.exists(os.path.join(TEST_DATA_ROOT, "output/iris-means-streamed.sample.csv")))
