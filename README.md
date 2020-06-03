@@ -1,23 +1,23 @@
-# python-adi
+# python-synthi
 
-A Python package for interacting with ADI via Python scripts and/or Jupyter notebooks
+A Python package for interacting with Synthi via Python scripts and/or Jupyter notebooks
 
 ## Environment variables
 
-This package needs to know where a valid ADI host is and have a valid api key. These
+This package needs to know where a valid Synthi host is and have a valid api key. These
 can be set as environment variables:
 
 ```bash
-export ADI_API_HOST=your_api_host
-export ADI_API_KEY=your_api_key
+export SYNTHI_API_HOST=your_api_host
+export SYNTHI_API_KEY=your_api_key
 ```
 
-or, in python (before you `import adi`):
+or, in python (before you `import synthi`):
 
 ```python
 import os
-os.environ['ADI_API_HOST'] = your_api_host
-os.environ['ADI_API_KEY'] = your_api_key
+os.environ['SYNTHI_API_HOST'] = your_api_host
+os.environ['SYNTHI_API_KEY'] = your_api_key
 ```
 
 ## Usage
@@ -26,21 +26,21 @@ If you've already set environment variables as indicated above, you can
 just rely on the defaults:
 
 ```python
-from adi import Connection
+from synthi import Connection
 client = Connection()
 client.organization.set_default('your-org')
 
 # list datasets
-adi.dataset.list()
+synthi.dataset.list()
 
 # get a dataset
-df = adi.dataset.get('some-dataset')
+df = synthi.dataset.get('some-dataset')
 ```
 
 You can also specify a host and api key when initializing the `Connection`:
 
 ```python
-from adi import Connection
+from synthi import Connection
 client = Connection('http://your-host', 'your-api-key')
 client.organization.set_default('your-org')
 
@@ -96,7 +96,7 @@ In this case, we expect `some-dataset` to exist, but we could have used that tra
 
 The following will get you into a bash shell where you can test out changes
 to the package. By default, it's connected to the adi_default network, which
-assumes that you've got ADI running locally. We'll probably want to make this
+assumes that you've got Synthi running locally. We'll probably want to make this
 configurable later.
 
 ```bash
@@ -113,7 +113,7 @@ pip install -e /usr/src/pkg
 That should allow you to:
 
 ```python
-import adi
+import synthi
 ```
 
 and work with whatever the most up to date code is in your project folder.

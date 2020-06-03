@@ -55,7 +55,7 @@ def gql_query(query, variables=dict(), file=None, connection=None):
   else:
     fileName = os.path.basename(file)
     mimetype, encoding = mimetypes.guess_type(file)
-    # See: https://github.com/cybera/adi/blob/master/manual/src/sections/ExportingAndImporting.md
+    # See: https://github.com/cybera/synthi/blob/master/manual/src/sections/ExportingAndImporting.md
     # for the curl command this is based off of.
     files = {
       'operations': (None, json_data, 'application/json'),

@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
   long_description = fh.read()
 
 setuptools.setup(
-  name="adi",
+  name="synthi",
   version="0.0.1",
   author="Cybera",
   author_email="datascience@cybera.ca",
-  description="Python API for interacting with the ADI platform",
+  description="Python API for interacting with the Synthi platform",
   long_description=long_description,
   long_description_content_type="text/markdown",
-  url="https://github.com/cybera/python-adi",
+  url="https://github.com/cybera/python-synthi",
   packages=setuptools.find_packages(),
   classifiers=[
     "Programming Language :: Python :: 3",
