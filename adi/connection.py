@@ -7,8 +7,8 @@ from .organization import OrganizationAPI
 
 class Connection:
   def __init__(self, host=None, api_key=None):
-    self.host    = host    or os.environ.get('ADI_API_HOST')
-    self.api_key = api_key or os.environ.get('ADI_API_KEY')
+    self.host    = host    or os.environ.get('SYNTHI_API_HOST')
+    self.api_key = api_key or os.environ.get('SYNTHI_API_KEY')
 
     self.dataset = DatasetAPI(connection=self)
     self.organization = OrganizationAPI(connection=self)
