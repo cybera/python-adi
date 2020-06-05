@@ -60,7 +60,10 @@ class DatasetAPI(OrganizationAwareAPI):
     if len(results['dataset']) > 1:
       raise ValueError("Couldn't find unique dataset for name or uuid")
 
-    return results['dataset'][0]
+    if len(results['dataset']) > 0:
+      return results['dataset'][0]
+    else:
+      return None
 
   def list(self):
     query = '''

@@ -1,0 +1,8 @@
+version: '3.4'
+services:
+  test:
+    build: ..
+    image: cybera/python-adi-dev:latest
+    volumes:
+      - ../:/usr/src/pkg
+    entrypoint: /usr/src/pkg/test/bootstrap.sh
