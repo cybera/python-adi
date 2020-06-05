@@ -62,7 +62,7 @@ class Transformation:
 
     for k,v in input_params.items():
       # Get default values set when creating the transformation. All of these
-      # can potentially be overridden by ADI.
+      # can potentially be overridden by Synthi.
       if k in self.inputs and isinstance(self.inputs[k], dict):
         datamap = { **self.inputs[k], **v }
       else:

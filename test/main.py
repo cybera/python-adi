@@ -1,7 +1,7 @@
 import os
 import pandas as pd
-from adi.dev.transformation import Transformation, transformation, dataset
-from adi.dev.stream_transformation import StreamTransformation
+from synthi.dev.transformation import Transformation, transformation, dataset
+from synthi.dev.stream_transformation import StreamTransformation
 
 import pytest
 

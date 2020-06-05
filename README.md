@@ -126,7 +126,7 @@ test out changes to the code.
 ./run-tests.sh
 ```
 
-This runs a python 3 development image, does a directory-based install of the current adi
+This runs a python 3 development image, does a directory-based install of the current synthi
 python package, and then runs *main.py* under *./test/*.
 
 Resulting dataset output will show up in *./test/data/output*.
