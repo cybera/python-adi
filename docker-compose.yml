@@ -2,11 +2,11 @@ version: '3.4'
 services:
   dev:
     build: .
-    image: cybera/python-adi-dev:latest
+    image: python-synthi-dev:latest
     volumes:
       - ./:/usr/src/pkg
 
 networks:
   default:
     external:
-      name: adi_default    
+      name: synthi_default    

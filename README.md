@@ -95,7 +95,7 @@ In this case, we expect `some-dataset` to exist, but we could have used that tra
 ## Development setup
 
 The following will get you into a bash shell where you can test out changes
-to the package. By default, it's connected to the adi_default network, which
+to the package. By default, it's connected to the synthi_default network, which
 assumes that you've got Synthi running locally. We'll probably want to make this
 configurable later.
 
